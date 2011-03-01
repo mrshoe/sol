@@ -5,7 +5,9 @@ import Vector
 import Ray
 import Primitives
 
-sceneObjects = [Sphere "black" (Vector3 3 0 0) 0.5]
+sceneObjects = [Sphere "black" (Vector3 3 0 0) 0.5
+               ,Triangle "black" (Vector3 3 0.6 (-0.5)) (Vector3 3 0.6 0.5) (Vector3 3 1 0) xaxis xaxis xaxis
+               ]
 
 minHit :: [Maybe HitInfo] -> Maybe HitInfo
 minHit = foldr isCloser Nothing
