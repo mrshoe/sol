@@ -1,8 +1,10 @@
+import Maybe
 import Graphics.Rendering.OpenGL
 import Graphics.UI.GLUT
 import Vector
 import Scene
 import Camera
+import Primitives
 
 myPoints :: [(GLfloat, GLfloat, GLfloat)]
 myPoints = map (\k -> (sin(2*pi*k/12), cos(2*pi*k/12), 0.0)) [1..12]
@@ -16,18 +18,22 @@ screenHeightf = fromIntegral screenHeight :: GLfloat
 pixels :: [(Int, Int)]
 pixels = [(x, y) | x <- [1..screenWidth], y <- [1..screenHeight]]
 
+isHit :: Maybe HitInfo -> Bool
+isHit (Just _) = True
+isHit Nothing = False
+
 main = do
-	(progname, _) <- getArgsAndInitialize
-	createWindow "Hello World"
-	displayCallback $= display
-	viewport $= (Position 0 0, Size 800 800)
-	loadIdentity
-	ortho2D 0 1 0 1
-	mainLoop
+    (progname, _) <- getArgsAndInitialize
+    createWindow "Hello World"
+    displayCallback $= display
+    viewport $= (Position 0 0, Size 800 800)
+    loadIdentity
+    ortho2D 0 1 0 1
+    mainLoop
 
 display =
-	let cam = initCamera v3zero xaxis screenWidth screenHeight in
-	do
-		clear [ColorBuffer]
-		renderPrimitive Points $ mapM_ (\(x,y) -> vertex $ Vertex2 ((fromIntegral x)/screenWidthf) ((fromIntegral y)/screenHeightf)) (filter (\(px,py) -> sceneIntersect $ eyeRay cam px py) pixels)
-		flush
+    let cam = initCamera v3zero xaxis screenWidth screenHeight in
+    do
+        clear [ColorBuffer]
+        renderPrimitive Points $ mapM_ (\(x,y) -> vertex $ Vertex2 ((fromIntegral x)/screenWidthf) ((fromIntegral y)/screenHeightf)) (filter (\(px,py) -> isHit $ sceneIntersect $ eyeRay cam px py) pixels)
+        flush

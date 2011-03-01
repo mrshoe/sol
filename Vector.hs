@@ -1,36 +1,34 @@
 module Vector where
-data Vector3 = Vector3 { x :: Double, y :: Double, z :: Double } deriving Show
+data Vector3 = Vector3 Double Double Double deriving Show
+type Vertex = Vector3
+type Normal = Vector3
 
 (>*) :: Vector3 -> Double -> Vector3
-(>*) v i = Vector3 ((x v) * i) ((y v) * i) ((z v) * i)
+(>*) (Vector3 x y z) i = Vector3 (x * i) (y * i) (z * i)
 
 (>+) :: Vector3 -> Vector3 -> Vector3
-(>+) a b = Vector3 (add_comp x) (add_comp y) (add_comp z)
-	where add_comp c = (c a) + (c b)
+(>+) (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) = Vector3 (x1+x2) (y1+y2) (z1+z2)
 
 (>-) :: Vector3 -> Vector3 -> Vector3
-(>-) a b = Vector3 (sub_comp x) (sub_comp y) (sub_comp z)
-	where sub_comp c = (c a) - (c b)
+(>-) (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) = Vector3 (x1-x2) (y1-y2) (z1-z2)
 
 (>.) :: Vector3 -> Vector3 -> Double
-(>.) a b = (mul_comp x) + (mul_comp y) + (mul_comp z)
-	where mul_comp c = (c a) * (c b)
+(>.) (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) = (x1*x2) + (y1*y2) + (z1*z2)
 
 (><) :: Vector3 -> Vector3 -> Vector3
-(><) a b = Vector3 ((y a) * (z b) - (z a) * (y b)) ((z a) * (x b) - (x a) * (z b)) ((x a) * (y b) - (y a) * (x b))
+(><) (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) = Vector3 (y1*z2 - z1*y2) (z1*x2 - x1*z2) (x1*y2 - y1*x2)
 
 mag2 :: Vector3 -> Double
-mag2 v = (x v)*(x v) + (y v)*(y v) + (z v)*(z v)
+mag2 (Vector3 x y z) = x*x + y*y + z*z
 
 mag :: Vector3 -> Double
 mag = sqrt . mag2
 
 neg :: Vector3 -> Vector3
-neg v = Vector3 (-(x v)) (-(y v)) (-(z v))
+neg (Vector3 x y z) = Vector3 (-x) (-y) (-z)
 
 norm :: Vector3 -> Vector3
-norm v = let inv_mag = 1.0/mag v in
-				Vector3 ((x v)*inv_mag) ((y v)*inv_mag) ((z v)*inv_mag)
+norm v@(Vector3 x y z) = let inv_mag = 1.0/mag v in Vector3 (x*inv_mag) (y*inv_mag) (z*inv_mag)
 
 dist2 :: Vector3 -> Vector3 -> Double
 dist2 a b = mag2 $ b >- a
