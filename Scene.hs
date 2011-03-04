@@ -2,6 +2,7 @@ module Scene where
 
 import Maybe
 import Vector
+import Camera
 import Ray
 import Primitives
 
@@ -19,3 +20,9 @@ isCloser old@(Just (HitInfo d1 _ _ _)) new@(Just (HitInfo d2 _ _ _)) = if d1 < d
 
 sceneIntersect :: Ray -> Maybe HitInfo
 sceneIntersect ray = minHit $ map (intersect ray 0 10000) sceneObjects
+
+--sceneChuck :: Camera -> Rect -> [Color]
+--sceneChuck cam (Rect x y width height) = map sintersect [(px,py) | x <- [x..(x+width-1)] , y <- [y..(y+height-1)]]
+--    where
+--        sintersect (px, py) = case (sceneIntersect $ eyeRay cam px py) of Nothing -> Color 0 0 0
+--                                    Just _ -> Color 1 1 1

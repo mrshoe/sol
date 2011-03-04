@@ -4,19 +4,22 @@ import Maybe
 import Vector
 import Ray
 
-data Color = Color Double Double Double deriving Show
+data RGBColor = RGBColor Float Float Float deriving Show
 
-data Material = Material Color deriving Show
+data Material = Material RGBColor deriving Show
 type MaterialName = String
 
 data HitInfo = HitInfo Double Vertex Normal Material deriving Show
+
+-- offset x,y, width, height
+data Rect = Rect Double Double Double Double
 
 data Primitive =
     Sphere MaterialName Vertex Double
   | Triangle MaterialName Vertex Vertex Vertex Normal Normal Normal
     deriving Show
 
-fakehit = HitInfo 0 (Vector3 0 0 0) (Vector3 0 0 0) (Material (Color 0 0 0))
+fakehit = HitInfo 0 (Vector3 0 0 0) (Vector3 0 0 0) (Material (RGBColor 0 0 0))
 
 intersect :: Ray -> Double -> Double -> Primitive -> Maybe HitInfo
 intersect (Ray o d) tMin tMax (Sphere material center radius) =
