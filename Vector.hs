@@ -2,6 +2,7 @@ module Vector where
 data Vector3 = Vector3 Double Double Double deriving Show
 type Vertex = Vector3
 type Normal = Vector3
+type RGBColor = Vector3
 
 (>*) :: Vector3 -> Double -> Vector3
 (>*) (Vector3 x y z) i = Vector3 (x * i) (y * i) (z * i)

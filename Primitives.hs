@@ -4,10 +4,11 @@ import Maybe
 import Vector
 import Ray
 
-data RGBColor = RGBColor Float Float Float deriving Show
-
 data Material = Material RGBColor deriving Show
 type MaterialName = String
+
+redmat = Material (Vector3 1 0 0)
+bluemat = Material (Vector3 0 0 1)
 
 data HitInfo = HitInfo Double Vertex Normal Material deriving Show
 
@@ -19,11 +20,13 @@ data Primitive =
   | Triangle MaterialName Vertex Vertex Vertex Normal Normal Normal
     deriving Show
 
-fakehit = HitInfo 0 (Vector3 0 0 0) (Vector3 0 0 0) (Material (RGBColor 0 0 0))
+data Light =
+    PointLight Int Vertex RGBColor
+    deriving Show
 
 intersect :: Ray -> Double -> Double -> Primitive -> Maybe HitInfo
 intersect (Ray o d) tMin tMax (Sphere material center radius) =
-    if discriminant < 0 || t < tMin || t > tMax then Nothing else Just fakehit
+    if discriminant < 0 || t < tMin || t > tMax then Nothing else Just thehit
     where
         discriminant = bsquared - fourAC
         bsquared = let b = d >. toCenter in b * b
@@ -34,16 +37,19 @@ intersect (Ray o d) tMin tMax (Sphere material center radius) =
         tmpt = (-(d >. toCenter))
         rootshift = if root > tmpt then root else (-root)
         root = sqrt discriminant
+        thehit = HitInfo t p n redmat
+        p = o >+ (d >* t)
+        n = norm $ p >- center
 
 -- use barycentric coords
 -- see page 157 of shirley's book for the math
-intersect (Ray o@(Vector3 ox oy oz) d@(Vector3 g h i)) tMin tMax
+intersect (Ray ro@(Vector3 ox oy oz) rd@(Vector3 g h i)) tMin tMax
     (Triangle material (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) (Vector3 x3 y3 z3)
                         n1 n2 n3) =
     if t < tMin || t > tMax || bigB < (-0.0001) || bigB > 1.0001 ||
        bigG < (-0.0001) || bigG > (1.0001-bigB)
     then Nothing
-    else Just fakehit
+    else Just thehit
     where
         t = -1*((f*(a*k-j*b) + e*(j*c-a*l) + d*(b*l-k*c))/bigM)
         a = x1 - x2
@@ -61,3 +67,6 @@ intersect (Ray o@(Vector3 ox oy oz) d@(Vector3 g h i)) tMin tMax
         bigM = a*ei_hf + b*gf_di + c*dh_eg
         bigB = (j*ei_hf + k*gf_di + l*dh_eg)/bigM
         bigG = (i*(a*k-j*b) + h*(j*c-a*l) + g*(b*l-k*c))/bigM
+        thehit = HitInfo t p n bluemat
+        p = ro >+ (rd >* t)
+        n = xaxis >* (-1) -- TODO
