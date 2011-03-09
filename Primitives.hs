@@ -9,6 +9,8 @@ type MaterialName = String
 
 redmat = Material (Vector3 1 0 0)
 bluemat = Material (Vector3 0 0 1)
+greenmat = Material (Vector3 0 1 0)
+whitemat = Material (Vector3 1 1 1)
 
 data HitInfo = HitInfo Double Vertex Normal Material deriving Show
 
@@ -37,7 +39,7 @@ intersect (Ray o d) tMin tMax (Sphere material center radius) =
         tmpt = (-(d >. toCenter))
         rootshift = if root > tmpt then root else (-root)
         root = sqrt discriminant
-        thehit = HitInfo t p n redmat
+        thehit = HitInfo t p n whitemat
         p = o >+ (d >* t)
         n = norm $ p >- center
 

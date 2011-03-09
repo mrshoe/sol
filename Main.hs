@@ -45,7 +45,7 @@ setColor pxFloats (x, y) (Vector3 r g b) = let fidx = (y*800+x)*3 in do
     pokeElemOff pxFloats (fidx+2) (realToFrac b)
 
 display =
-    let cam = initCamera v3zero xaxis screenWidth screenHeight in
+    let cam = initCamera (Vector3 (0.5) 0 0) xaxis screenWidth screenHeight in
     do
         clear [ColorBuffer]
         pxFloats <- mallocArray (800*800*3) :: IO (Ptr Float)

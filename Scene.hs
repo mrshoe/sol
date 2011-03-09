@@ -10,7 +10,7 @@ sceneObjects = [Sphere "black" (Vector3 3 0 0) 0.5
                ,Triangle "black" (Vector3 3 0.6 (-0.5)) (Vector3 3 0.6 0.5) (Vector3 3 1 0) xaxis xaxis xaxis
                ]
 
-sceneLights = [PointLight 60 (Vector3 0 1 0) (Vector3 1 1 1)
+sceneLights = [PointLight 100 (Vector3 (-1) 2 0) (Vector3 1 1 1)
               ]
 
 minHit :: [Maybe HitInfo] -> Maybe HitInfo
@@ -33,9 +33,10 @@ sceneShadeLight :: HitInfo -> Light -> RGBColor
 sceneShadeLight (HitInfo dist p n (Material rgbcolor))
                 (PointLight wattage lightpos lightcolor) = rgbcolor >* (diffuse / lightFalloff)
     where
-        diffuse = 1.0 -- for now (should come from the material)
+        diffuse = n >. (norm toLight) -- for now (should come from the material)
+        toLight = lightpos >- p
         lightFalloff = (4 * pi * lightDistSq) / (fromIntegral wattage)
-        lightDistSq = mag2 (lightpos >- p)
+        lightDistSq = mag2 toLight
 
 --sceneChuck :: Camera -> Rect -> [Color]
 --sceneChuck cam (Rect x y width height) = map sintersect [(px,py) | x <- [x..(x+width-1)] , y <- [y..(y+height-1)]]
