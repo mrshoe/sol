@@ -39,7 +39,7 @@ intersect (Ray o d) tMin tMax (Sphere material center radius) =
         tmpt = (-(d >. toCenter))
         rootshift = if root > tmpt then root else (-root)
         root = sqrt discriminant
-        thehit = HitInfo t p n whitemat
+        thehit = HitInfo t p n redmat
         p = o >+ (d >* t)
         n = norm $ p >- center
 
