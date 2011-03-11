@@ -1,4 +1,8 @@
+import Data.Time.Clock
+import Data.IORef
 import Control.Concurrent
+import Control.Monad
+import System.IO
 import Foreign
 import Graphics.Rendering.OpenGL hiding (Vector3)
 import Graphics.UI.GLUT hiding (Vector3)
@@ -21,8 +25,13 @@ openGLInit =
     windowSize $= (Size 512 512)
     viewport $= (Position 0 0, Size 512 512)
     displayCallback $= display
-    finishedChunk <- newEmptyMVar
-    idleCallback $= Just (idle finishedChunk)
+    chunkMVars <- replicateM (chunksPerSide*chunksPerSide) newEmptyMVar
+    camMVars <- replicateM (chunksPerSide*chunksPerSide) newEmptyMVar
+    keyRef <- newIORef (False, False, False, False)
+    mouseRef <- newIORef (0, 0, 0, 0)
+    idleCallback $= Just (idle cam chunkMVars camMVars keyRef mouseRef 0 0)
+    keyboardMouseCallback $= Just (keyboardMouse keyRef mouseRef)
+    motionCallback $= Just (mouseMotion mouseRef)
     loadIdentity
     ortho2D 0 1 0 1
     shadeModel $= Flat
@@ -35,13 +44,13 @@ openGLInit =
     textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
     pxFloats <- mallocArray (screenWidth*screenHeight*3) :: IO (Ptr Float)
     texImage2D Nothing NoProxy 0 RGB' (TextureSize2D 512 512) 0 (PixelData RGB Float pxFloats)
-    mapM_ (\(x, y, width, height) -> forkIO (doChunk finishedChunk cam x y width height)) chunks
     free pxFloats
+    mapM_ (\(chunkMVar, camMVar, (x, y, width, height)) -> forkIO (doChunk chunkMVar camMVar x y width height)) $ zip3 chunkMVars camMVars chunks
     where
-        cam = initCamera (Vector3 (-5) 6 0) (Vector3 3 0 0) screenWidth screenHeight
+        cam = initCamera (Vector3 (-5) 6 0) (Vector3 1 0 0) screenWidth screenHeight
         chunks = [(x*chunksize, y*chunksize, chunksize, chunksize) | x <- [0..(chunksPerSide-1)], y <- [0..(chunksPerSide-1)]]
-        chunksize = 64
-        chunksPerSide = 8
+        chunksize = 128
+        chunksPerSide = 4
 
 setColor :: Ptr Float -> Int -> RGBColor -> IO ()
 setColor pxFloats idx (Vector3 r g b) = let fidx = idx*3 in do
@@ -49,12 +58,57 @@ setColor pxFloats idx (Vector3 r g b) = let fidx = idx*3 in do
     pokeElemOff pxFloats (fidx+1) (realToFrac g)
     pokeElemOff pxFloats (fidx+2) (realToFrac b)
 
-doChunk finishedChunk cam startx starty width height =
+doChunk chunkMVar camMVar startx starty width height =
     let pixels = [(x, y) | y <- [starty..(starty+height-1)], x <- [startx..(startx+width-1)]] in
-    do
+    forever $ do
+        cam <- takeMVar camMVar
         pxFloats <- mallocArray (width*height*3) :: IO (Ptr Float)
         mapM_ (\(idx, (x, y)) -> setColor pxFloats idx (sceneShade $ sceneIntersect $ eyeRay cam x y)) $ zip [0..] pixels
-        putMVar finishedChunk (startx, starty, width, height, pxFloats)
+        putMVar chunkMVar (startx, starty, width, height, pxFloats)
+
+idle cam chunkMVars camMVars keyRef mouseRef nextSample numFrames =
+    do
+        mapM_ (\v -> putMVar v cam) camMVars -- pass the current camera to each worker thread
+        mapM_ drawChunk chunkMVars
+        keys <- readIORef keyRef -- fetch the key state to modify the camera for the next frame
+        (mousex, mousey, mousedx, mousedy) <- readIORef mouseRef
+        writeIORef mouseRef (mousex, mousey, 0, 0)
+        endTime <- getCurrentTime
+        if (utctDayTime endTime) > nextSample then do
+            putStr $ "\r" ++ (show numFrames) ++ "fps          "
+            hFlush stdout
+            idleCallback $= Just (idle (cameraMouseLook (mousedx, mousedy) (cameraProcessKeys keys cam)) chunkMVars camMVars keyRef mouseRef ((utctDayTime endTime) + 1) 0)
+        else do
+            idleCallback $= Just (idle (cameraMouseLook (mousedx, mousedy) (cameraProcessKeys keys cam)) chunkMVars camMVars keyRef mouseRef nextSample (numFrames + 1))
+        postRedisplay Nothing
+    where
+        drawChunk chunkMVar = do
+            (startx, starty, width, height, pxFloats) <- takeMVar chunkMVar
+            texSubImage2D Nothing 0 (TexturePosition2D (fromIntegral startx) (fromIntegral starty)) (TextureSize2D (fromIntegral width) (fromIntegral height)) (PixelData RGB Float pxFloats)
+            free pxFloats
+
+stateBool state = case state of
+                    Up -> False
+                    Down -> True
+keyboardMouse keyRef mouseRef (Char 'w') state modifiers position = do
+    (fwd, back, left, right) <- readIORef keyRef
+    writeIORef keyRef ((stateBool state), back, left, right)
+keyboardMouse keyRef mouseRef (Char 's') state modifiers position = do
+    (fwd, back, left, right) <- readIORef keyRef
+    writeIORef keyRef (fwd, (stateBool state), left, right)
+keyboardMouse keyRef mouseRef (Char 'a') state modifiers position = do
+    (fwd, back, left, right) <- readIORef keyRef
+    writeIORef keyRef (fwd, back, (stateBool state), right)
+keyboardMouse keyRef mouseRef (Char 'd') state modifiers position = do
+    (fwd, back, left, right) <- readIORef keyRef
+    writeIORef keyRef (fwd, back, left, (stateBool state))
+keyboardMouse keyRef mouseRef (MouseButton LeftButton) Down modifiers (Position x y) = do
+    writeIORef mouseRef (x, y, 0, 0)
+keyboardMouse keyRef mouseRef key state modifiers position = return ()
+
+mouseMotion mouseRef (Position x y) = do
+    (oldx, oldy, dx, dy) <- readIORef mouseRef
+    writeIORef mouseRef (x, y, dx+(x-oldx), dy+(y-oldy))
 
 display =
     do
@@ -68,13 +122,6 @@ display =
             texCoord $ TexCoord2 (1::GLfloat) (0::GLfloat)
             vertex $ Vertex2 (1::GLfloat) (0::GLfloat)
         flush
-
-idle finishedChunk =
-    do
-        (startx, starty, width, height, pxFloats) <- takeMVar finishedChunk
-        texSubImage2D Nothing 0 (TexturePosition2D (fromIntegral startx) (fromIntegral starty)) (TextureSize2D (fromIntegral width) (fromIntegral height)) (PixelData RGB Float pxFloats)
-        free pxFloats
-        postRedisplay Nothing
 
 main = do
     (progname, _) <- getArgsAndInitialize
