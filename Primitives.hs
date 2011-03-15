@@ -71,4 +71,4 @@ intersect (Ray ro@(Vector3 ox oy oz) rd@(Vector3 g h i)) tMin tMax
         bigG = (i*(a*k-j*b) + h*(j*c-a*l) + g*(b*l-k*c))/bigM
         thehit = HitInfo t p n bluemat
         p = ro >+ (rd >* t)
-        n = xaxis >* (-1) -- TODO
+        n = n1 -- TODO

@@ -42,10 +42,10 @@ cameraBack :: Camera -> Camera
 cameraBack cam@(Camera eye dir _ _ _ _ _ _ _) = cameraMove cam $ eye >- (dir >* 0.2)
 
 cameraRight :: Camera -> Camera
-cameraRight cam@(Camera eye dir _ _ _ _ _ _ _) = cameraMove cam $ eye >+ ((yaxis >< dir) >* 0.2)
+cameraRight cam@(Camera eye dir _ _ _ _ _ _ _) = cameraMove cam $ eye >+ ((dir >< yaxis) >* 0.2)
 
 cameraLeft :: Camera -> Camera
-cameraLeft cam@(Camera eye dir _ _ _ _ _ _ _) = cameraMove cam $ eye >+ ((dir >< yaxis) >* 0.2)
+cameraLeft cam@(Camera eye dir _ _ _ _ _ _ _) = cameraMove cam $ eye >+ ((yaxis >< dir) >* 0.2)
 
 cameraProcessKeys :: (Bool, Bool, Bool, Bool) -> Camera -> Camera
 cameraProcessKeys (fwd, back, left, right) = 
@@ -54,4 +54,4 @@ cameraProcessKeys (fwd, back, left, right) =
 -- a gross approximation :-P
 cameraMouseLook :: (GLint, GLint) -> Camera -> Camera
 cameraMouseLook (dx, dy) (Camera eye dir width height _ _ _ _ _) = initCamera eye newdir width height
-    where newdir = norm $ dir >+ ((dir >< yaxis) >* (-(fromIntegral dx)/500)) >+ (yaxis >* (-(fromIntegral dy)/500))
+    where newdir = norm $ dir >+ ((dir >< yaxis) >* ((fromIntegral dx)/500)) >+ (yaxis >* (-(fromIntegral dy)/500))

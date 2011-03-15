@@ -21,7 +21,7 @@ screenHeightf = fromIntegral screenHeight :: GLfloat
 openGLInit :: IO ()
 openGLInit =
     do
-    createWindow "Hello World"
+    createWindow "sol"
     windowSize $= (Size 512 512)
     viewport $= (Position 0 0, Size 512 512)
     displayCallback $= display
@@ -47,7 +47,7 @@ openGLInit =
     free pxFloats
     mapM_ (\(chunkMVar, camMVar, (x, y, width, height)) -> forkIO (doChunk chunkMVar camMVar x y width height)) $ zip3 chunkMVars camMVars chunks
     where
-        cam = initCamera (Vector3 (-5) 6 0) (Vector3 1 0 0) screenWidth screenHeight
+        cam = initCamera (Vector3 (-8) 3 0) (Vector3 1 0 0) screenWidth screenHeight
         chunks = [(x*chunksize, y*chunksize, chunksize, chunksize) | x <- [0..(chunksPerSide-1)], y <- [0..(chunksPerSide-1)]]
         chunksize = 128
         chunksPerSide = 4
@@ -63,7 +63,7 @@ doChunk chunkMVar camMVar startx starty width height =
     forever $ do
         cam <- takeMVar camMVar
         pxFloats <- mallocArray (width*height*3) :: IO (Ptr Float)
-        mapM_ (\(idx, (x, y)) -> setColor pxFloats idx (sceneShade $ sceneIntersect $ eyeRay cam x y)) $ zip [0..] pixels
+        mapM_ (\(idx, (x, y)) -> setColor pxFloats idx (sceneShade 0 $ sceneIntersect 0 10000 $ eyeRay cam x y)) $ zip [0..] pixels
         putMVar chunkMVar (startx, starty, width, height, pxFloats)
 
 idle cam chunkMVars camMVars keyRef mouseRef nextSample numFrames =
@@ -87,9 +87,9 @@ idle cam chunkMVars camMVars keyRef mouseRef nextSample numFrames =
             texSubImage2D Nothing 0 (TexturePosition2D (fromIntegral startx) (fromIntegral starty)) (TextureSize2D (fromIntegral width) (fromIntegral height)) (PixelData RGB Float pxFloats)
             free pxFloats
 
-stateBool state = case state of
-                    Up -> False
-                    Down -> True
+stateBool Up = False
+stateBool Down = True
+
 keyboardMouse keyRef mouseRef (Char 'w') state modifiers position = do
     (fwd, back, left, right) <- readIORef keyRef
     writeIORef keyRef ((stateBool state), back, left, right)
@@ -113,13 +113,13 @@ mouseMotion mouseRef (Position x y) = do
 display =
     do
         renderPrimitive Quads $ do
-            texCoord $ TexCoord2 (0::GLfloat) (0::GLfloat)
-            vertex $ Vertex2 (0::GLfloat) (0::GLfloat)
-            texCoord $ TexCoord2 (0::GLfloat) (1::GLfloat)
-            vertex $ Vertex2 (0::GLfloat) (1::GLfloat)
-            texCoord $ TexCoord2 (1::GLfloat) (1::GLfloat)
-            vertex $ Vertex2 (1::GLfloat) (1::GLfloat)
             texCoord $ TexCoord2 (1::GLfloat) (0::GLfloat)
+            vertex $ Vertex2 (0::GLfloat) (0::GLfloat)
+            texCoord $ TexCoord2 (1::GLfloat) (1::GLfloat)
+            vertex $ Vertex2 (0::GLfloat) (1::GLfloat)
+            texCoord $ TexCoord2 (0::GLfloat) (1::GLfloat)
+            vertex $ Vertex2 (1::GLfloat) (1::GLfloat)
+            texCoord $ TexCoord2 (0::GLfloat) (0::GLfloat)
             vertex $ Vertex2 (1::GLfloat) (0::GLfloat)
         flush
 
