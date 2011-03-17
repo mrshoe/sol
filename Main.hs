@@ -47,7 +47,7 @@ openGLInit =
     free pxFloats
     mapM_ (\(chunkMVar, camMVar, (x, y, width, height)) -> forkIO (doChunk chunkMVar camMVar x y width height)) $ zip3 chunkMVars camMVars chunks
     where
-        cam = initCamera (Vector3 (-8) 3 0) (Vector3 1 0 0) screenWidth screenHeight
+        cam = initCamera (Vector3 (-7.25) 3 0) (Vector3 1 0 0) screenWidth screenHeight
         chunks = [(x*chunksize, y*chunksize, chunksize, chunksize) | x <- [0..(chunksPerSide-1)], y <- [0..(chunksPerSide-1)]]
         chunksize = 128
         chunksPerSide = 4

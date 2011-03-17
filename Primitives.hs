@@ -3,14 +3,24 @@ module Primitives where
 import Maybe
 import Vector
 import Ray
+import qualified Data.Map as M
 
-data Material = Material RGBColor deriving Show
+data Material = Material RGBColor Double deriving Show
 type MaterialName = String
 
-redmat = Material (Vector3 1 0 0)
-bluemat = Material (Vector3 0 0 1)
-greenmat = Material (Vector3 0 1 0)
-whitemat = Material (Vector3 1 1 1)
+sceneMaterials = M.fromList [
+	("red", Material (Vector3 1 0.3 0.3) 0.0),
+	("blue", Material (Vector3 0.3 0.3 1) 0.0),
+	("green", Material (Vector3 0 1 0) 0.0),
+	("white", Material (Vector3 1 1 1) 0.0),
+	("mirror", Material (Vector3 0.2 0.2 0.2) 1.0)
+    ]
+defaultMaterial = Material (Vector3 1 1 1) 0.0
+
+lookupMaterial :: MaterialName -> Material
+lookupMaterial name = case M.lookup name sceneMaterials of
+                        Just m -> m
+                        Nothing -> defaultMaterial
 
 data HitInfo = HitInfo Double Vertex Normal Material deriving Show
 
@@ -39,7 +49,7 @@ intersect (Ray o d) tMin tMax (Sphere material center radius) =
         tmpt = (-(d >. toCenter))
         rootshift = if root > tmpt then root else (-root)
         root = sqrt discriminant
-        thehit = HitInfo t p n redmat
+        thehit = HitInfo t p n $ lookupMaterial material
         p = o >+ (d >* t)
         n = norm $ p >- center
 
@@ -69,6 +79,6 @@ intersect (Ray ro@(Vector3 ox oy oz) rd@(Vector3 g h i)) tMin tMax
         bigM = a*ei_hf + b*gf_di + c*dh_eg
         bigB = (j*ei_hf + k*gf_di + l*dh_eg)/bigM
         bigG = (i*(a*k-j*b) + h*(j*c-a*l) + g*(b*l-k*c))/bigM
-        thehit = HitInfo t p n bluemat
+        thehit = HitInfo t p n $ lookupMaterial material
         p = ro >+ (rd >* t)
         n = n1 -- TODO
