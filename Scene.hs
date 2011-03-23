@@ -23,8 +23,8 @@ sceneObjects = [
     ]
 
 sceneLights = [
---    PointLight 60 (Vector3 (-1) 4 0) (Vector3 1 1 1),
-    PointLight 90 (Vector3 3 4 0) (Vector3 1 1 1)
+--    Light 90 (PointLight (Vector3 3 4 0)) (Vector3 1 1 1)
+    Light 120 (RectLight (Vector3 1.5 5.99 (-1.5)) (xaxis >* 3) (zaxis >* 3)) (Vector3 1 1 1)
     ]
 
 minHit :: [Maybe HitInfo] -> Maybe HitInfo
@@ -44,16 +44,22 @@ sceneShade depth (Just hitinfo)
     | depth < 4 = foldr (>+) v3zero $ map (sceneShadeLight depth hitinfo) sceneLights
     | otherwise = v3zero
 
+shadowRay :: Vertex -> Vertex -> Double
+shadowRay p lightpos =  case sceneIntersect 0.001 1.0 (Ray p $ lightpos >- p) of
+                                            Just _ -> 0.0
+                                            Nothing -> 1.0
+
 -- TODO: lightcolor
 sceneShadeLight :: Int -> HitInfo -> Light -> RGBColor
 sceneShadeLight depth (HitInfo dist p n (Material rgbcolor specular))
-                light@(PointLight wattage lightpos lightcolor) =
-    (rgbcolor >* (diffuse / lightFalloff)) >+ specularColor
+                light@(Light wattage lightshape lightcolor) =
+    (rgbcolor >* diffuseTotal) >+ specularColor
     where
-        diffuse = if shadowRay then 0 else max 0.0 $ n >. (norm toLight)
-        toLight = lightpos >- p
-        lightFalloff = (4 * pi * lightDistSq) / (fromIntegral wattage)
-        lightDistSq = mag2 toLight
-        shadowRay = isJust $ sceneIntersect 0.001 (sqrt lightDistSq) (Ray p (norm toLight))
+        diffuseTotal = foldr (+) 0.0 $ map diffuse lightSamples
+        diffuse lightpos = let toLight = (lightpos >- p) in (lightPower lightpos) * (shadowRay p lightpos) * (max 0.0 $ n >. toLight) / mag toLight
+        lightPower lightpos = (fromIntegral wattage) / (4 * pi * (mag2 (lightpos >- p)) * numLightSamples)
         specularColor = if specular > 0.01 then (specularRay (Ray p n)) >* specular else v3zero
         specularRay r = sceneShade (depth+1) $ sceneIntersect 0.001 10000 r
+        lightSamples = lightSample lightshape strata
+        numLightSamples = fromIntegral $ length lightSamples
+        strata = 10

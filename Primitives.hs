@@ -18,23 +18,21 @@ sceneMaterials = M.fromList [
 defaultMaterial = Material (Vector3 1 1 1) 0.0
 
 lookupMaterial :: MaterialName -> Material
-lookupMaterial name = case M.lookup name sceneMaterials of
-                        Just m -> m
-                        Nothing -> defaultMaterial
+lookupMaterial = (flip $ M.findWithDefault defaultMaterial) sceneMaterials
 
 data HitInfo = HitInfo Double Vertex Normal Material deriving Show
-
--- offset x,y, width, height
-data Rect = Rect Double Double Double Double
 
 data Primitive =
     Sphere MaterialName Vertex Double
   | Triangle MaterialName Vertex Vertex Vertex Normal Normal Normal
     deriving Show
 
-data Light =
-    PointLight Int Vertex RGBColor
+data LightShape =
+    PointLight Vertex
+  | RectLight Vertex Vector3 Vector3
     deriving Show
+
+data Light = Light Int LightShape RGBColor deriving Show
 
 intersect :: Ray -> Double -> Double -> Primitive -> Maybe HitInfo
 intersect (Ray o d) tMin tMax (Sphere material center radius) =
@@ -82,3 +80,10 @@ intersect (Ray ro@(Vector3 ox oy oz) rd@(Vector3 g h i)) tMin tMax
         thehit = HitInfo t p n $ lookupMaterial material
         p = ro >+ (rd >* t)
         n = n1 -- TODO
+
+lightSample :: LightShape -> Double -> [Vertex]
+lightSample (PointLight v) _ = [v]
+lightSample (RectLight v side1 side2) strata = map (\(x,y) -> start >+ (side1step >* x) >+ (side2step >* y)) [(x,y) | x <- [0..(strata-1)], y <- [0..(strata-1)]]
+    where side1step = side1 >* (1/strata)
+          side2step = side2 >* (1/strata)
+          start = v >+ (side1step >* 0.5) >+ (side2step >* 0.5)
