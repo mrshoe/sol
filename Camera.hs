@@ -1,7 +1,6 @@
 module Camera where
 import Graphics.Rendering.OpenGL (GLint)
 import Vector
-import Ray
 
 --                   eye    dir   width height    u       v       w       b       t
 data Camera = Camera Vertex Vector3 Int Int Vector3 Vector3 Vector3 Vector3 Vector3 deriving Show
@@ -20,13 +19,13 @@ initCamera eye dir width height = Camera eye dir width height u v w b t
         fov = pi * (45/360)
         aspect = (fromIntegral width) / (fromIntegral height)
 
-eyeRay :: Camera -> Int -> Int -> Ray
+eyeRay :: Camera -> Double -> Double -> Ray
 eyeRay (Camera eye _ width height u v w b@(Vector3 bx by bz) t@(Vector3 tx ty tz)) xpos ypos = Ray o d
     where
         o = eye
         d = norm $ uprime >+ vprime >+ wprime
-        dirx = bx + (tx - bx) * ((fromIntegral xpos + 0.5) / (fromIntegral width))
-        diry = by + (ty - by) * ((fromIntegral ypos + 0.5) / (fromIntegral height))
+        dirx = bx + (tx - bx) * (xpos / (fromIntegral width))
+        diry = by + (ty - by) * (ypos / (fromIntegral height))
         uprime = u >* dirx
         vprime = v >* diry
         wprime = w >* bz

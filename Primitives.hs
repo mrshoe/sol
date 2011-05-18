@@ -1,8 +1,7 @@
 module Primitives where
 
-import Maybe
+--import Maybe
 import Vector
-import Ray
 import qualified Data.Map as M
 
 data Material = Material RGBColor Double deriving Show
@@ -83,7 +82,8 @@ intersect (Ray ro@(Vector3 ox oy oz) rd@(Vector3 g h i)) tMin tMax
 
 lightSample :: LightShape -> Double -> [Vertex]
 lightSample (PointLight v) _ = [v]
-lightSample (RectLight v side1 side2) strata = map (\(x,y) -> start >+ (side1step >* x) >+ (side2step >* y)) [(x,y) | x <- [0..(strata-1)], y <- [0..(strata-1)]]
+lightSample (RectLight v side1 side2) strata = map subsample [(x,y) | x <- [0..(strata-1)], y <- [0..(strata-1)]]
     where side1step = side1 >* (1/strata)
           side2step = side2 >* (1/strata)
           start = v >+ (side1step >* 0.5) >+ (side2step >* 0.5)
+          subsample (x,y) = start >+ (side1step >* x) >+ (side2step >* y)

@@ -1,9 +1,8 @@
 module Scene where
 
-import Maybe
+--import Maybe
 import Vector
 import Camera
-import Ray
 import Primitives
 
 --sceneObjects = map (\x -> Sphere "black" (Vector3 x 0 0) 0.5) [2..10] ++ [Triangle "black" (Vector3 8 0.6 (-0.5)) (Vector3 8 0.6 0.5) (Vector3 8 1 0) xaxis xaxis xaxis]
@@ -23,8 +22,8 @@ sceneObjects = [
     ]
 
 sceneLights = [
---    Light 90 (PointLight (Vector3 3 4 0)) (Vector3 1 1 1)
-    Light 120 (RectLight (Vector3 1.5 5.99 (-1.5)) (xaxis >* 3) (zaxis >* 3)) (Vector3 1 1 1)
+    Light 90 (PointLight (Vector3 3 4 0)) (Vector3 1 1 1)
+--    Light 120 (RectLight (Vector3 1.5 5.99 (-1.5)) (xaxis >* 3) (zaxis >* 3)) (Vector3 1 1 1)
     ]
 
 minHit :: [Maybe HitInfo] -> Maybe HitInfo

@@ -3,6 +3,7 @@ data Vector3 = Vector3 Double Double Double deriving Show
 type Vertex = Vector3
 type Normal = Vector3
 type RGBColor = Vector3
+data Ray = Ray Vertex Vector3 deriving Show
 
 (>*) :: Vector3 -> Double -> Vector3
 (>*) v i = vmap (*i) v
