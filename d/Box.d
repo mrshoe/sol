@@ -1,0 +1,76 @@
+/*
+ * Box.d
+ */
+
+private import Scene;
+private import Vector3;
+
+// swap two floats.. stupid util func
+void FloatSwap(float *one, float *two)
+{
+	float temp = *one;
+	*one = *two;
+	*two = temp;
+}
+
+struct Box {
+	bool Intersect(out HitInfo hit, Ray ray, double tMin, double tMax)
+	{
+		float T1, T2, Tnear, Tfar;
+		// Try to bail out if the ray is paralell to the box sides
+		// X Slabs:
+		if ( ray.d.x == 0.0 && (ray.o.x < min.x || ray.o.x > max.x))
+			return false;
+		// Y Slabs:
+		if ( ray.d.y == 0.0 && (ray.o.y < min.y || ray.o.y > max.y))
+			return false;
+		// Z Slabs:
+		if ( ray.d.z == 0.0 && (ray.o.z < min.z || ray.o.z > max.z))
+			return false;
+
+		Tnear = tMin - 1.0f;
+		Tfar = tMax + 1.0f;
+		// X Slabs
+		T1 = (min.x - ray.o.x) / ray.d.x;
+		T2 = (max.x - ray.o.x) / ray.d.x;
+		if ( T1 > T2 ) { FloatSwap(&T1, &T2); }
+		if ( T1 > Tnear) { Tnear = T1; }
+		if ( T2 < Tfar) Tfar = T2;
+		if ( Tnear > Tfar ) return false;
+		if ( Tfar < 0 ) return false;
+
+		// Y Slabs
+		T1 = (min.y - ray.o.y) / ray.d.y;
+		T2 = (max.y - ray.o.y) / ray.d.y;
+		if ( T1 > T2 ) { FloatSwap(&T1, &T2); }
+		if ( T1 > Tnear) { Tnear = T1; }
+		if ( T2 < Tfar) Tfar = T2;
+		if ( Tnear > Tfar ) return false;
+		if ( Tfar < 0 ) return false;
+
+		// Z Slabs
+		T1 = (min.z - ray.o.z) / ray.d.z;
+		T2 = (max.z - ray.o.z) / ray.d.z;
+		if ( T1 > T2 ) { FloatSwap(&T1, &T2); }
+		if ( T1 > Tnear) { Tnear = T1; }
+		if ( T2 < Tfar) Tfar = T2;
+		if ( Tnear > Tfar ) return false;
+		if ( Tfar < 0 ) return false;
+
+		if ( Tnear < tMin)
+			Tnear = Tfar;
+		if ( Tnear < tMin || Tnear > tMax)
+			return false;
+
+		return true;
+	}
+
+	bool ContainsPoint(Vector3 p)
+	{
+		return (p.x >= min.x && p.x <= max.x &&
+				p.y >= min.y && p.y <= max.y &&
+				p.z >= min.z && p.z <= max.z);
+	}
+
+	Vector3 min,max;
+}

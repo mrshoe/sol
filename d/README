@@ -1,0 +1,28 @@
+BUILDING SOL
+----------------------
+Mac OS X:
+	% make
+
+*nix:
+	Edit Makefile to include Makedefs.linux instead of Makedefs.mac, then:
+	% make
+
+Windows:
+	You're on your own, but it shouldn't be too difficult to compile with DMD
+	and link in the necessary OpenGL and GLUT C libraries.
+
+RUNNING SOL
+----------------------
+Usage:
+	% sol scenefile
+
+Example scene files are *.sol in the source directory.
+
+QUESTIONS AND COMMENTS
+----------------------
+Please post questions and comments to the dsource forum found at:
+http://www.dsource.org/projects/sol
+
+Also, feel free to contact me at mrshoe _at_ gmail . com any time.
+
+Thank you, and enjoy!

@@ -1,0 +1,15 @@
+SOL = sol
+DC = @dmd
+ECHO = @echo
+RM = @rm -f
+OUTFILE = -of$@
+# profiling mode
+#DFLAGS = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -g -pg
+# debug mode
+DFLAGS = #-fdebug -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -g
+# release mode
+#DFLAGS = -frelease -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -fomit-frame-pointer -mcpu=7450 -O3
+# profiling mode
+#LFLAGS = -lobjc -framework OpenGL -framework Cocoa -framework GLUT -pg
+# non-profiling modes
+LFLAGS = -L-lglut -L-lGL
