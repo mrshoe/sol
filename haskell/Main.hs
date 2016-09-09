@@ -18,8 +18,6 @@ imgHeight = 512 :: Int
 imgWidth32 = (fromIntegral imgWidth) :: Int32
 imgHeight32 = (fromIntegral imgHeight) :: Int32
 
-antialiasing = 3 :: Double
-
 openGLInit :: IO ()
 openGLInit =
     do
@@ -60,10 +58,13 @@ setColor pxFloats idx (Vector3 r g b) = let fidx = idx*3 in do
     pokeElemOff pxFloats (fidx+1) (realToFrac g)
     pokeElemOff pxFloats (fidx+2) (realToFrac b)
 
-getColor :: Camera -> Int -> Int -> RGBColor
-getColor cam x y = avgColor $ map doEyeRay eyePoints
+doEyeRay :: Camera -> (Double, Double) -> RGBColor
+doEyeRay cam (ex,ey) = sceneShade 0 $ sceneIntersect 0 10000 $ eyeRay cam ex ey
+
+getColor :: Camera -> Int -> Int -> Double -> RGBColor
+getColor cam x y 1 = doEyeRay cam (((fromIntegral x) + 0.5), ((fromIntegral y) + 0.5))
+getColor cam x y antialiasing = avgColor $ map (doEyeRay cam) eyePoints
     where
-        doEyeRay (ex,ey) = sceneShade 0 $ sceneIntersect 0 10000 $ eyeRay cam ex ey
         eyePoints = [((fromIntegral x)+(i*antialias_step), (fromIntegral y)+(j*antialias_step)) | i <- [0..(antialiasing-1)], j <- [0..(antialiasing-1)]]
         avgColor colors = (foldr (>+) v3zero colors) >* (1/(fromIntegral $ length colors))
         antialias_step = (1/antialiasing)
@@ -73,7 +74,7 @@ doChunk chunkMVar camMVar startx starty width height =
     forever $ do
         cam <- takeMVar camMVar
         pxFloats <- mallocArray (width*height*3) :: IO (Ptr Float)
-        mapM_ (\(idx, (x, y)) -> setColor pxFloats idx (getColor cam x y)) $ zip [0..] pixels
+        mapM_ (\(idx, (x, y)) -> setColor pxFloats idx (getColor cam x y 1)) $ zip [0..] pixels
         putMVar chunkMVar (startx, starty, width, height, pxFloats)
 
 idle cam chunkMVars camMVars keyRef mouseRef nextSample numFrames =
