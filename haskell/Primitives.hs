@@ -8,11 +8,11 @@ data Material = Material RGBColor Double deriving Show
 type MaterialName = String
 
 sceneMaterials = M.fromList [
-	("red", Material (Vector3 1 0.3 0.3) 0.0),
-	("blue", Material (Vector3 0.3 0.3 1) 0.0),
-	("green", Material (Vector3 0 1 0) 0.0),
-	("white", Material (Vector3 1 1 1) 0.0),
-	("mirror", Material (Vector3 0.2 0.2 0.2) 1.0)
+    ("red", Material (Vector3 1 0.3 0.3) 0.0),
+    ("blue", Material (Vector3 0.3 0.3 1) 0.0),
+    ("green", Material (Vector3 0 1 0) 0.0),
+    ("white", Material (Vector3 1 1 1) 0.0),
+    ("mirror", Material (Vector3 0.2 0.2 0.2) 1.0)
     ]
 defaultMaterial = Material (Vector3 1 1 1) 0.0
 

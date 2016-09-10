@@ -43,7 +43,7 @@ openGLInit =
     textureBinding Texture2D $= Just texName
     textureFilter Texture2D $= ((Nearest, Nothing), Nearest)
     pxFloats <- mallocArray (imgWidth*imgHeight*3) :: IO (Ptr Float)
-    texImage2D Nothing NoProxy 0 RGB' (TextureSize2D imgWidth32 imgHeight32) 0 (PixelData RGB Float pxFloats)
+    texImage2D Texture2D NoProxy 0 RGB' (TextureSize2D imgWidth32 imgHeight32) 0 (PixelData RGB Float pxFloats)
     free pxFloats
     mapM_ (\(chunkMVar, camMVar, (x, y, width, height)) -> forkIO (doChunk chunkMVar camMVar x y width height)) $ zip3 chunkMVars camMVars chunks
     where
@@ -95,7 +95,7 @@ idle cam chunkMVars camMVars keyRef mouseRef nextSample numFrames =
     where
         drawChunk chunkMVar = do
             (startx, starty, width, height, pxFloats) <- takeMVar chunkMVar
-            texSubImage2D Nothing 0 (TexturePosition2D (fromIntegral startx) (fromIntegral starty)) (TextureSize2D (fromIntegral width) (fromIntegral height)) (PixelData RGB Float pxFloats)
+            texSubImage2D Texture2D 0 (TexturePosition2D (fromIntegral startx) (fromIntegral starty)) (TextureSize2D (fromIntegral width) (fromIntegral height)) (PixelData RGB Float pxFloats)
             free pxFloats
 
 stateBool Up = False
