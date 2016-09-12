@@ -1,6 +1,6 @@
 #SOL = Sol.app/Contents/MacOS/sol
 SOL = sol
-CC = @gcc
+CC = @clang
 ECHO = @echo
 RM = @rm -f
 LEX = @lex
@@ -10,7 +10,7 @@ YACC = @yacc -d
 # debug mode
 #CFLAGS = -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -g
 # release mode
-CFLAGS = -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -fomit-frame-pointer -O3 -fast
+CFLAGS = -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -fomit-frame-pointer -O3
 # profiling mode
 #LFLAGS = -lobjc -framework OpenGL -framework Cocoa -framework GLUT -pg
 # non-profiling modes
