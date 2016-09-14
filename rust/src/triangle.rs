@@ -32,25 +32,25 @@ impl SceneObject for Triangle {
         let ei_hf = e*i - h*f;
         let gf_di = g*f - d*i;
         let dh_eg = d*h - e*g;
-        let M = a*ei_hf + b*gf_di + c*dh_eg;
+        let m = a*ei_hf + b*gf_di + c*dh_eg;
 
-        let t = -((f*(a*k-j*b) + e*(j*c-a*l) + d*(b*l-k*c))/M);
+        let t = -((f*(a*k-j*b) + e*(j*c-a*l) + d*(b*l-k*c))/m);
         if t < min || t > max {
             return None;
         }
         //barycentric coords
-        let B = (j*ei_hf + k*gf_di + l*dh_eg)/M;
-        if B < -0.0001 || B > 1.0001 {
+        let beta = (j*ei_hf + k*gf_di + l*dh_eg)/m;
+        if beta < -0.0001 || beta > 1.0001 {
             return None;
         }
-        let G = (i*(a*k-j*b) + h*(j*c-a*l) + g*(b*l-k*c))/M;
-        if G < -0.0001 || G > (1.0001-B) {
+        let gamma = (i*(a*k-j*b) + h*(j*c-a*l) + g*(b*l-k*c))/m;
+        if gamma < -0.0001 || gamma > (1.0001-beta) {
             return None;
         }
-        let alpha = 1.0-B-G;
+        let alpha = 1.0-beta-gamma;
         let tn1 = self.n1 * alpha;
-        let tn2 = self.n2 * B;
-        let tn3 = self.n3 * G;
+        let tn2 = self.n2 * beta;
+        let tn3 = self.n3 * gamma;
         let normal = (tn1 + tn2 + tn3).normalize();
 
         let relative_point = ray.direction * t;

@@ -5,6 +5,7 @@ use std::f64;
 use image::{ ImageBuffer, Luma };
 use sceneobject::SceneObject;
 use triangle::Triangle;
+use light::Light;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -13,6 +14,7 @@ pub struct Scene {
 
     camera: Camera,
     objects: Vec<Box<SceneObject>>,
+    lights: Vec<Light>,
 }
 
 impl Scene {
@@ -23,23 +25,30 @@ impl Scene {
             v2: Vector3 { x: 1.0, y: 0.0, z: 0.0 },
             v3: Vector3 { x: 0.0, y: 1.0, z: 0.0 },
 
-            n1: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-            n2: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-            n3: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
+            n1: Vector3 { x: 0.0, y: 0.0, z: 1.0 },
+            n2: Vector3 { x: 0.0, y: 0.0, z: 1.0 },
+            n3: Vector3 { x: 0.0, y: 0.0, z: 1.0 },
         };
         let mut objects: Vec<Box<SceneObject>> = Vec::new();
         objects.push(Box::new(t));
+        let lights = vec![
+            Light {
+                position: Vector3 { x: 0.5, y: 1.5, z: 3.0 },
+                color: Vector3 { x: 1.0, y: 1.0, z: 1.0 },
+                wattage: 100f64,
+            }
+        ];
         Scene {
             width: width,
             height: height,
 
             camera: cam,
             objects: objects,
+            lights: lights,
         }
     }
 
     pub fn raytrace(&self) -> ImageBuffer<Luma<u8>, Vec<u8>> {
-        let z = Vector3 { x: 0.0, y: 0.0, z: 1.0 };
         ImageBuffer::from_fn(self.width, self.height, |x, y| {
             let eye_ray = self.camera.eye_ray(x, y);
             if let Some(hit) = self.trace(&eye_ray, 0.0, f64::MAX) {
@@ -71,6 +80,18 @@ impl Scene {
     }
 
     fn shade(&self, hit: &HitInfo, eye_ray: &Ray, depth: u32) -> Vector3<f64> {
-        Vector3 { x: 1.0, y: 1.0, z: 1.0, }
+        let mut result = Vector3 { x: 0f64, y: 0f64, z: 0f64 };
+        for light in &self.lights {
+            // TODO: get color from material
+            let color = Vector3 { x: 1f64, y: 1f64, z: 1f64 };
+            let to_light = light.position - hit.point;
+            let light_dist_sq = to_light.mag2();
+            let light_dist = light_dist_sq.sqrt();
+            let light_falloff = 4f64 * f64::consts::PI * light_dist_sq / light.wattage;
+            let to_light_norm = to_light / light_dist;
+            let diffuse = hit.normal.dot(to_light_norm);
+            result = result + (color * (diffuse / light_falloff));
+        }
+        result.clamp(0f64, 1f64)
     }
 }

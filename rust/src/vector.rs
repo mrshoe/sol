@@ -134,3 +134,12 @@ impl<T> Vector3<T> where T: Mul<Output=T> + Sub<Output=T> + Copy {
         }
     }
 }
+
+impl<T> Vector3<T> where T: PartialOrd + Copy {
+    pub fn clamp(&self, min: T, max: T) -> Vector3<T> {
+        let x = if self.x > max { max } else if self.x < min { min } else { self.x };
+        let y = if self.y > max { max } else if self.y < min { min } else { self.y };
+        let z = if self.z > max { max } else if self.z < min { min } else { self.z };
+        Vector3 { x: x, y: y, z: z, }
+    }
+}
