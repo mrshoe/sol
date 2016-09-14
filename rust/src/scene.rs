@@ -43,8 +43,8 @@ impl Scene {
         ImageBuffer::from_fn(self.width, self.height, |x, y| {
             let eye_ray = self.camera.eye_ray(x, y);
             if let Some(hit) = self.trace(&eye_ray, 0.0, f64::MAX) {
-                let d = eye_ray.direction.dot(z);
-                Luma([(d*256.0) as u8])
+                let color = self.shade(&hit, &eye_ray, 0);
+                Luma([(color.x*255.0) as u8])
             }
             else {
                 Luma([0u8])
@@ -54,7 +54,7 @@ impl Scene {
 
     fn trace(&self, eye_ray: &Ray, min: f64, max: f64) -> Option<HitInfo> {
         let mut minhit: Option<HitInfo> = None;
-        for box_obj in self.objects {
+        for box_obj in &self.objects {
             let sh = box_obj.intersect(eye_ray, min, max);
             if let Some(hit) = sh {
                 if let Some(mh) = minhit {
@@ -67,13 +67,10 @@ impl Scene {
                 }
             }
         }
-        /*
-        let hi = HitInfo {
-            distance: 0.0,
-            point: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-            normal: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-        };
-        */
         minhit
+    }
+
+    fn shade(&self, hit: &HitInfo, eye_ray: &Ray, depth: u32) -> Vector3<f64> {
+        Vector3 { x: 1.0, y: 1.0, z: 1.0, }
     }
 }

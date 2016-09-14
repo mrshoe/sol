@@ -58,12 +58,12 @@ impl Camera {
     }
 
     pub fn eye_ray(&self, x: u32, y: u32) -> Ray {
+        // x-flip ?
+        let x = self.width as u32 - x;
+        // y-flip ?
+        let y = self.height as u32 - y;
         let nx = ((x as f64) + 0.5) / self.width;
         let ny = ((y as f64) + 0.5) / self.height;
-        // x-flip ?
-        //x = self.width - x;
-        // y-flip ?
-        //y = self.height - y;
         let sx = self.b.x + (self.t.x - self.b.x) * nx;
         let sy = self.b.y + (self.t.y - self.b.y) * ny;
         let sz = self.b.z;

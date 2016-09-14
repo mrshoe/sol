@@ -16,8 +16,6 @@ const width: u32 = 512;
 const height: u32 = 512;
 
 fn main() {
-    println!("Hello, world!");
-
     let vf = vector::Vector3 { x: 0.5, y: 2.5, z: 4.5 };
     let vf2 = vector::Vector3 { x: 2.5, y: 4.5, z: 6.5 };
     let vi = vector::Vector3 { x: 1, y: 2, z: 3 };
