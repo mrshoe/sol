@@ -6,3 +6,4 @@ authors = [ "David Shoemaker <mrshoe@gmail.com>" ]
 
 [dependencies]
 image = "*"
+regex = "*"
