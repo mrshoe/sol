@@ -7,11 +7,11 @@ pub struct Camera {
     width: f64,
     height: f64,
 
-    eye: Vector3<f64>,
-    up: Vector3<f64>,
-    dir: Vector3<f64>,
+    pub eye: Vector3<f64>,
+    pub up: Vector3<f64>,
+    pub dir: Vector3<f64>,
 //    lookat: Vector3<f64>,
-    fov: f64,
+    pub fov: f64,
     u: Vector3<f64>,
     v: Vector3<f64>,
     w: Vector3<f64>,
@@ -21,18 +21,11 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(width: u32, height: u32) -> Camera {
-        let bz = 0.0001;
-        let tz = bz + 1.0;
-        let fov = f64::consts::PI / 4.0;
-        //tan(fov) = t.y / b.z
-        let ty = bz * fov.tan();
-        //t.x / t.y = nx / ny
-        let tx = ((width as f64) / (height as f64)) * ty;
-        let bx = -(tx);
-        let by = -(ty);
+        let w = width as f64;
+        let h = height as f64;
         let mut result = Camera {
-            width: width as f64,
-            height: height as f64,
+            width: w,
+            height: h,
 
             eye: Vector3 { x: 0.0, y: 0.0, z: 1.0 },
             up: Vector3 { x: 0.0, y: 1.0, z: 1.0 },
@@ -44,11 +37,29 @@ impl Camera {
             v: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
             w: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
 
-            b: Vector3 { x: bx, y: by, z: bz },
-            t: Vector3 { x: tx, y: ty, z: tz },
+            // b and t are set by resize()
+            b: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
+            t: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
         };
+        result.resize(w, h);
         result.update();
         result
+    }
+
+    pub fn resize(&mut self, width: f64, height: f64) {
+        let bz = 0.0001;
+        let tz = bz + 1.0;
+        let fov = f64::consts::PI / 4.0;
+        //tan(fov) = t.y / b.z
+        let ty = bz * fov.tan();
+        //t.x / t.y = nx / ny
+        let tx = ((width as f64) / (height as f64)) * ty;
+        let bx = -(tx);
+        let by = -(ty);
+        self.b = Vector3 { x: bx, y: by, z: bz };
+        self.t = Vector3 { x: tx, y: ty, z: tz };
+        self.width = width;
+        self.height = height;
     }
 
     fn update(&mut self) {

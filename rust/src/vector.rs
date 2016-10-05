@@ -143,3 +143,12 @@ impl<T> Vector3<T> where T: PartialOrd + Copy {
         Vector3 { x: x, y: y, z: z, }
     }
 }
+
+impl<T> Vector3<T> where T: Copy {
+    pub fn init(val: T) -> Vector3<T> {
+        Vector3 { x: val, y: val, z: val }
+    }
+    pub fn new(x: T, y: T, z: T) -> Vector3<T> {
+        Vector3 { x: x, y: y, z: z }
+    }
+}
