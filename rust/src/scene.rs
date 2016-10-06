@@ -13,38 +13,20 @@ pub struct Scene {
     height: u32,
 
     pub camera: Camera,
-    objects: Vec<Box<SceneObject>>,
-    lights: Vec<Light>,
+    pub objects: Vec<Box<SceneObject>>,
+    pub lights: Vec<Light>,
 }
 
 impl Scene {
     pub fn new(width: u32, height: u32) -> Scene {
         let cam = Camera::new(width, height);
-        let t = Triangle {
-            v1: Vector3::init(0.0),
-            v2: Vector3::new(1.0, 0.0, 0.0),
-            v3: Vector3::new(0.0, 1.0, 0.0),
-
-            n1: Vector3::new(0.0, 0.0, 1.0),
-            n2: Vector3::new(0.0, 0.0, 1.0),
-            n3: Vector3::new(0.0, 0.0, 1.0),
-        };
-        let mut objects: Vec<Box<SceneObject>> = Vec::new();
-        objects.push(Box::new(t));
-        let lights = vec![
-            Light {
-                position: Vector3 { x: 0.5, y: 1.5, z: 3.0 },
-                color: Vector3 { x: 1.0, y: 1.0, z: 1.0 },
-                wattage: 100f64,
-            }
-        ];
         Scene {
             width: width,
             height: height,
 
             camera: cam,
-            objects: objects,
-            lights: lights,
+            objects: Vec::new(),
+            lights: Vec::new(),
         }
     }
 

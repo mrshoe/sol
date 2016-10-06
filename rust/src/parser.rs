@@ -4,6 +4,8 @@ use std::result;
 use std::num::ParseIntError;
 use std::str::FromStr;
 use vector::Vector3;
+use light::Light;
+use triangle::Triangle;
 
 struct ParsedScene<'a> {
     tokens: Vec<&'a str>,
@@ -13,7 +15,7 @@ struct ParsedScene<'a> {
 pub fn parse_scene(scenedef: String) -> result::Result<Scene, String> {
     // cleanup: ditch all comments and commas
     let comment_re = Regex::new(r"(,|#[^\n]*\n)").unwrap();
-    let scenedef_sans_comments = comment_re.replace_all(&scenedef, "");
+    let scenedef_sans_comments = comment_re.replace_all(&scenedef, " ");
     let mut scene = Scene::new(128, 128);
     {
         let mut parsed_scene = ParsedScene {
@@ -58,6 +60,8 @@ impl<'a> ParsedScene<'a> {
                     match section.as_ref() {
                         "options" => self.parse_options(),
                         "camera" => self.parse_camera(),
+                        "pointlight" => self.parse_pointlight(),
+                        "triangle" => self.parse_triangle(),
                         _ => Err(ParseSceneError::GenericError),
                     }
                 });
@@ -76,6 +80,22 @@ impl<'a> ParsedScene<'a> {
                 Err(ParseSceneError::GenericError)
             }
         })
+    }
+
+    fn parse_string(&mut self) -> result::Result<String, ParseSceneError> {
+        self.tokens.last()
+            .ok_or(ParseSceneError::GenericError)
+            .and_then(|s| {
+                let q = '"';
+                if s.chars().count() > 2 && s.chars().nth(0).unwrap() == q && s.chars().last().unwrap() == q {
+                    let chars_to_trim: &[char] = &[q];
+                    Ok(s.trim_matches(chars_to_trim).to_string())
+                }
+                else {
+                    Err(ParseSceneError::GenericError)
+                }
+            // only if the above succeeds should we consume the token
+            }).map(|s| { let _ = self.next_token(); s })
     }
 
     fn parse_num<T>(&mut self) -> result::Result<T, ParseSceneError> where T : FromStr {
@@ -122,7 +142,7 @@ impl<'a> ParsedScene<'a> {
                 "bgcolor" => p.parse_vector3().map(|v| ()),
                 "bspdepth" => p.parse_num::<i32>().map(|i| ()),
                 "bspleafobjs" => p.parse_num::<i32>().map(|i| ()),
-                _ => return Err(ParseSceneError::GenericError),
+                _ => Err(ParseSceneError::GenericError),
             }
         }).map(|_| self.scene.resize(width, height))
     }
@@ -131,12 +151,54 @@ impl<'a> ParsedScene<'a> {
         self.parse_section(|p, t| {
             println!("camera directive: {}", t);
             match t.as_ref() {
-//                "lookat" => p.parse_vector3().map(|v| ()),
-//                "pos" => p.parse_vector3().map(|v| ()),
-//                "up" => p.parse_vector3().map(|v| ()),
+                "lookat" => p.parse_vector3().map(|v| p.scene.camera.lookat = v),
+                "pos" => p.parse_vector3().map(|v| p.scene.camera.eye = v),
+                "up" => p.parse_vector3().map(|v| p.scene.camera.up = v),
                 "fov" => p.parse_num().map(|f| p.scene.camera.fov = f),
-                _ => return Err(ParseSceneError::GenericError),
+                _ => Err(ParseSceneError::GenericError),
             }
-        })
+        }).map(|_| self.scene.camera.update())
+    }
+
+    fn parse_pointlight(&mut self) -> ParseResult {
+        let mut light = Light {
+            position: Vector3::init(0.0),
+            color: Vector3::init(1.0),
+            wattage: 100f64,
+        };
+        self.parse_section(|p, t| {
+            println!("pointlight directive: {}", t);
+            match t.as_ref() {
+                "pos" => p.parse_vector3().map(|v| light.position = v),
+                "color" => p.parse_vector3().map(|v| light.color = v),
+                "wattage" => p.parse_num().map(|f| light.wattage = f),
+                _ => Err(ParseSceneError::GenericError),
+            }
+        }).map(|_| self.scene.lights.push(light))
+    }
+
+    fn parse_triangle(&mut self) -> ParseResult {
+        let mut tri = Triangle {
+            v1: Vector3::init(0.0),
+            v2: Vector3::new(1.0, 0.0, 0.0),
+            v3: Vector3::new(0.0, 1.0, 0.0),
+
+            n1: Vector3::new(0.0, 0.0, 1.0),
+            n2: Vector3::new(0.0, 0.0, 1.0),
+            n3: Vector3::new(0.0, 0.0, 1.0),
+        };
+        self.parse_section(|p, t| {
+            println!("triangle directive: {}", t);
+            match t.as_ref() {
+                "v1" => p.parse_vector3().map(|v| tri.v1 = v),
+                "v2" => p.parse_vector3().map(|v| tri.v2 = v),
+                "v3" => p.parse_vector3().map(|v| tri.v3 = v),
+                "n1" => p.parse_vector3().map(|v| tri.n1 = v),
+                "n2" => p.parse_vector3().map(|v| tri.n2 = v),
+                "n3" => p.parse_vector3().map(|v| tri.n3 = v),
+                "material" => p.parse_string().map(|v| println!("triangle material: {}", v)),
+                _ => Err(ParseSceneError::GenericError),
+            }
+        }).map(|_| self.scene.objects.push(Box::new(tri)))
     }
 }

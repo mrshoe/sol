@@ -10,7 +10,7 @@ pub struct Camera {
     pub eye: Vector3<f64>,
     pub up: Vector3<f64>,
     pub dir: Vector3<f64>,
-//    lookat: Vector3<f64>,
+    pub lookat: Vector3<f64>,
     pub fov: f64,
     u: Vector3<f64>,
     v: Vector3<f64>,
@@ -27,19 +27,20 @@ impl Camera {
             width: w,
             height: h,
 
-            eye: Vector3 { x: 0.0, y: 0.0, z: 1.0 },
-            up: Vector3 { x: 0.0, y: 1.0, z: 1.0 },
-            dir: Vector3 { x: 0.0, y: 0.0, z: -1.0 },
+            eye: Vector3::new(0.0, 0.0, 1.0),
+            lookat: Vector3::init(0.0),
+            up: Vector3::new(0.0, 1.0, 1.0),
+            dir: Vector3::new(0.0, 0.0, -1.0),
             fov: f64::consts::PI / 4.0,
 
             // u, v, w are set by update()
-            u: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-            v: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-            w: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
+            u: Vector3::new(0.0, 0.0, 0.0),
+            v: Vector3::new(0.0, 0.0, 0.0),
+            w: Vector3::new(0.0, 0.0, 0.0),
 
             // b and t are set by resize()
-            b: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-            t: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
+            b: Vector3::new(0.0, 0.0, 0.0),
+            t: Vector3::new(0.0, 0.0, 0.0),
         };
         result.resize(w, h);
         result.update();
@@ -62,7 +63,8 @@ impl Camera {
         self.height = height;
     }
 
-    fn update(&mut self) {
+    pub fn update(&mut self) {
+        self.dir = (self.lookat - self.eye).normalize();
         self.w = self.dir;
         self.u = self.up.cross(self.w).normalize();
         self.v = self.w.cross(self.u).normalize();
