@@ -6,6 +6,7 @@ use std::str::FromStr;
 use vector::Vector3;
 use light::Light;
 use triangle::Triangle;
+use sphere::Sphere;
 use material::Material;
 
 struct ParsedScene<'a> {
@@ -35,13 +36,13 @@ enum ParseSceneError {
 }
 
 impl From<ParseIntError> for ParseSceneError {
-    fn from(err: ParseIntError) -> ParseSceneError {
+    fn from(_: ParseIntError) -> ParseSceneError {
         ParseSceneError::GenericError
     }
 }
 
 impl From<ParseSceneError> for String {
-    fn from(err: ParseSceneError) -> String {
+    fn from(_: ParseSceneError) -> String {
         "Parse error".to_string()
     }
 }
@@ -56,13 +57,14 @@ impl<'a> ParsedScene<'a> {
     fn parse(&'a mut self) {
         self.tokens.reverse();
         while self.tokens.len() > 0 {
-            self.next_token()
+            let _ = self.next_token()
                 .and_then(|section| {
                     match section.as_ref() {
                         "options" => self.parse_options(),
                         "camera" => self.parse_camera(),
                         "pointlight" => self.parse_pointlight(),
                         "triangle" => self.parse_triangle(),
+                        "sphere" => self.parse_sphere(),
                         "material" => self.parse_material(),
                         _ => Err(ParseSceneError::GenericError),
                     }
@@ -127,13 +129,12 @@ impl<'a> ParsedScene<'a> {
                                     }
                                     let _ = match directive_parser(self, t) {
                                         Ok(_) => continue,
-                                        e @ Err(_) => return Err(ParseSceneError::GenericError),
+                                        Err(_) => return Err(ParseSceneError::GenericError),
                                     };
                                 },
                                 _ => return Err(ParseSceneError::GenericError),
                             }
                         }
-                        Ok(s)
                     })
             })
     }
@@ -146,9 +147,9 @@ impl<'a> ParsedScene<'a> {
             match t.as_ref() {
                 "width" => p.parse_num().map(|i| width = i),
                 "height" => p.parse_num().map(|i| height = i),
-                "bgcolor" => p.parse_vector3().map(|v| ()),
-                "bspdepth" => p.parse_num::<i32>().map(|i| ()),
-                "bspleafobjs" => p.parse_num::<i32>().map(|i| ()),
+                "bgcolor" => p.parse_vector3().map(|v| p.scene.bgcolor = v),
+                "bspdepth" => p.parse_num::<i32>().map(|_| ()),
+                "bspleafobjs" => p.parse_num::<i32>().map(|_| ()),
                 _ => Err(ParseSceneError::GenericError),
             }
         }).map(|_| self.scene.resize(width, height))
@@ -209,6 +210,23 @@ impl<'a> ParsedScene<'a> {
                 _ => Err(ParseSceneError::GenericError),
             }
         }).map(|_| self.scene.objects.push(Box::new(tri)))
+    }
+
+    fn parse_sphere(&mut self) -> ParseResult {
+        let mut sphere = Sphere {
+            center: Vector3::init(0.0),
+            radius: 0.0,
+            material: "white".to_string(),
+        };
+        self.parse_section(|p, t| {
+            println!("triangle directive: {}", t);
+            match t.as_ref() {
+                "center" => p.parse_vector3().map(|v| sphere.center = v),
+                "radius" => p.parse_num().map(|f| sphere.radius = f),
+                "material" => p.parse_string().map(|s| sphere.material = s),
+                _ => Err(ParseSceneError::GenericError),
+            }
+        }).map(|_| self.scene.objects.push(Box::new(sphere)))
     }
 
     fn parse_material(&mut self) -> ParseResult {

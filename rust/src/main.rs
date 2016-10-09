@@ -13,6 +13,7 @@ mod camera;
 mod scene;
 mod sceneobject;
 mod triangle;
+mod sphere;
 mod light;
 mod parser;
 mod material;

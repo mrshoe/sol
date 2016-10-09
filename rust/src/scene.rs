@@ -4,7 +4,6 @@ use ray::{ Ray, HitInfo };
 use std::f64;
 use image::{ ImageBuffer, Rgb };
 use sceneobject::SceneObject;
-use triangle::Triangle;
 use light::Light;
 use material::Material;
 
@@ -12,6 +11,7 @@ use material::Material;
 pub struct Scene {
     width: u32,
     height: u32,
+    pub bgcolor: Vector3<f64>,
 
     pub camera: Camera,
     pub objects: Vec<Box<SceneObject>>,
@@ -25,6 +25,7 @@ impl Scene {
         Scene {
             width: width,
             height: height,
+            bgcolor: Vector3::init(0.0),
 
             camera: cam,
             objects: Vec::new(),
@@ -42,13 +43,13 @@ impl Scene {
     pub fn raytrace(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
         ImageBuffer::from_fn(self.width, self.height, |x, y| {
             let eye_ray = self.camera.eye_ray(x, y);
-            if let Some(hit) = self.trace(&eye_ray, 0.0, f64::MAX) {
-                let color = self.shade(&hit, &eye_ray, 0);
-                Rgb([(color.x*255.0) as u8, (color.y*255.0) as u8, (color.z*255.0) as u8])
+            let color = if let Some(hit) = self.trace(&eye_ray, 0.0, f64::MAX) {
+                self.shade(&hit, &eye_ray, 0) * 255.0
             }
             else {
-                Rgb([0u8, 0u8, 0u8])
-            }
+                self.bgcolor * 255.0
+            };
+            Rgb([color.x as u8, color.y as u8, color.z as u8])
         })
     }
 
