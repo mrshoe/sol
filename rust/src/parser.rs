@@ -6,6 +6,7 @@ use std::str::FromStr;
 use vector::Vector3;
 use light::Light;
 use triangle::Triangle;
+use material::Material;
 
 struct ParsedScene<'a> {
     tokens: Vec<&'a str>,
@@ -62,6 +63,7 @@ impl<'a> ParsedScene<'a> {
                         "camera" => self.parse_camera(),
                         "pointlight" => self.parse_pointlight(),
                         "triangle" => self.parse_triangle(),
+                        "material" => self.parse_material(),
                         _ => Err(ParseSceneError::GenericError),
                     }
                 });
@@ -110,24 +112,29 @@ impl<'a> ParsedScene<'a> {
             .and_then(|t| _parse::<f64>(&t)).map(|z| { result.z = z; result })
     }
 
-    fn parse_section<F>(&mut self, mut directive_parser: F) -> ParseResult
+    fn parse_section<F>(&mut self, mut directive_parser: F) -> result::Result<String, ParseSceneError>
             where F : FnMut(&mut ParsedScene, String) -> ParseResult {
-        self.require("{")
-            .and_then(|_| {
-                loop {
-                    match self.next_token() {
-                        Ok(t) => {
-                            if t == "}".to_string() {
-                                return Ok(())
+        self.parse_string()
+            .or(Ok("".to_string()))
+            .and_then(|s| {
+                self.require("{")
+                    .and_then(|_| {
+                        loop {
+                            match self.next_token() {
+                                Ok(t) => {
+                                    if t == "}".to_string() {
+                                        return Ok(s)
+                                    }
+                                    let _ = match directive_parser(self, t) {
+                                        Ok(_) => continue,
+                                        e @ Err(_) => return Err(ParseSceneError::GenericError),
+                                    };
+                                },
+                                _ => return Err(ParseSceneError::GenericError),
                             }
-                            match directive_parser(self, t) {
-                                Ok(_) => continue,
-                                e @ Err(_) => return e,
-                            }
-                        },
-                        _ => return Err(ParseSceneError::GenericError),
-                    }
-                }
+                        }
+                        Ok(s)
+                    })
             })
     }
 
@@ -186,6 +193,8 @@ impl<'a> ParsedScene<'a> {
             n1: Vector3::new(0.0, 0.0, 1.0),
             n2: Vector3::new(0.0, 0.0, 1.0),
             n3: Vector3::new(0.0, 0.0, 1.0),
+
+            material: "white".to_string(),
         };
         self.parse_section(|p, t| {
             println!("triangle directive: {}", t);
@@ -196,9 +205,26 @@ impl<'a> ParsedScene<'a> {
                 "n1" => p.parse_vector3().map(|v| tri.n1 = v),
                 "n2" => p.parse_vector3().map(|v| tri.n2 = v),
                 "n3" => p.parse_vector3().map(|v| tri.n3 = v),
-                "material" => p.parse_string().map(|v| println!("triangle material: {}", v)),
+                "material" => p.parse_string().map(|s| tri.material = s),
                 _ => Err(ParseSceneError::GenericError),
             }
         }).map(|_| self.scene.objects.push(Box::new(tri)))
+    }
+
+    fn parse_material(&mut self) -> ParseResult {
+        let mut mat = Material::white();
+        self.parse_section(|p, t| {
+            println!("material directive: {}", t);
+            match t.as_ref() {
+                "color" => p.parse_vector3().map(|v| mat.color = v),
+                "diffuse" => p.parse_num().map(|f| mat.diffuse = f),
+                "specular" => p.parse_num().map(|f| mat.specular = f),
+                _ => Err(ParseSceneError::GenericError),
+            }
+        }).map(|n| {
+            println!("material name: {}", n);
+            mat.name = n;
+            self.scene.materials.push(mat)
+        })
     }
 }

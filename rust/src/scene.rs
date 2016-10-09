@@ -2,10 +2,11 @@ use camera::Camera;
 use vector::Vector3;
 use ray::{ Ray, HitInfo };
 use std::f64;
-use image::{ ImageBuffer, Luma };
+use image::{ ImageBuffer, Rgb };
 use sceneobject::SceneObject;
 use triangle::Triangle;
 use light::Light;
+use material::Material;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -15,6 +16,7 @@ pub struct Scene {
     pub camera: Camera,
     pub objects: Vec<Box<SceneObject>>,
     pub lights: Vec<Light>,
+    pub materials: Vec<Material>,
 }
 
 impl Scene {
@@ -27,6 +29,7 @@ impl Scene {
             camera: cam,
             objects: Vec::new(),
             lights: Vec::new(),
+            materials: Vec::new(),
         }
     }
 
@@ -36,15 +39,15 @@ impl Scene {
         self.camera.resize(width as f64, height as f64);
     }
 
-    pub fn raytrace(&self) -> ImageBuffer<Luma<u8>, Vec<u8>> {
+    pub fn raytrace(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
         ImageBuffer::from_fn(self.width, self.height, |x, y| {
             let eye_ray = self.camera.eye_ray(x, y);
             if let Some(hit) = self.trace(&eye_ray, 0.0, f64::MAX) {
                 let color = self.shade(&hit, &eye_ray, 0);
-                Luma([(color.x*255.0) as u8])
+                Rgb([(color.x*255.0) as u8, (color.y*255.0) as u8, (color.z*255.0) as u8])
             }
             else {
-                Luma([0u8])
+                Rgb([0u8, 0u8, 0u8])
             }
         })
     }
@@ -71,7 +74,9 @@ impl Scene {
         let mut result = Vector3 { x: 0f64, y: 0f64, z: 0f64 };
         for light in &self.lights {
             // TODO: get color from material
-            let color = Vector3 { x: 1f64, y: 1f64, z: 1f64 };
+            let white = Material::white();
+            let material = self.get_material(hit.material).unwrap_or(&white);
+            let color = material.color;
             let to_light = light.position - hit.point;
             let light_dist_sq = to_light.mag2();
             let light_dist = light_dist_sq.sqrt();
@@ -81,5 +86,14 @@ impl Scene {
             result = result + (color * (diffuse / light_falloff));
         }
         result.clamp(0f64, 1f64)
+    }
+
+    fn get_material(&self, name: &str) -> Option<&Material> {
+        for m in &self.materials {
+            if m.name == name {
+                return Some(&m);
+            }
+        }
+        return None;
     }
 }

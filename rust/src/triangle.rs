@@ -10,6 +10,7 @@ pub struct Triangle {
     pub n1: Vector3<f64>,
     pub n2: Vector3<f64>,
     pub n3: Vector3<f64>,
+    pub material: String,
 }
 
 impl SceneObject for Triangle {
@@ -59,6 +60,7 @@ impl SceneObject for Triangle {
             distance: t,
             point: point,
             normal: normal,
+            material: self.material.as_ref(),
         })
     }
 }

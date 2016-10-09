@@ -15,6 +15,7 @@ mod sceneobject;
 mod triangle;
 mod light;
 mod parser;
+mod material;
 
 use parser::parse_scene;
 
@@ -31,7 +32,7 @@ fn raytrace_scene(scenedef: String) {
             let imgbuf = scene.raytrace();
 
             let ref mut fout = File::create(&Path::new("sol.png")).unwrap();
-            let _ = image::ImageLuma8(imgbuf).save(fout, image::PNG);
+            let _ = image::ImageRgb8(imgbuf).save(fout, image::PNG);
         },
         Err(s) => println!("{}", s),
     }

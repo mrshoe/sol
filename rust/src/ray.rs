@@ -7,9 +7,10 @@ pub struct Ray {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct HitInfo {
+pub struct HitInfo<'a> {
     pub distance: f64,
     pub point: Vector3<f64>,
     pub normal: Vector3<f64>,
+    pub material: &'a str,
 }
 
