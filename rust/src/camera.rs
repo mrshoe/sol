@@ -43,24 +43,28 @@ impl Camera {
             t: Vector3::new(0.0, 0.0, 0.0),
         };
         result.resize(w, h);
-        result.update();
         result
     }
 
     pub fn resize(&mut self, width: f64, height: f64) {
+        self.width = width;
+        self.height = height;
+        self.setup_viewport();
+    }
+
+    pub fn setup_viewport(&mut self) {
+        println!("camera fov: {}", self.fov);
         let bz = 0.0001;
         let tz = bz + 1.0;
-        let fov = f64::consts::PI / 4.0;
         //tan(fov) = t.y / b.z
-        let ty = bz * fov.tan();
+        let ty = bz * self.fov.tan();
         //t.x / t.y = nx / ny
-        let tx = ((width as f64) / (height as f64)) * ty;
+        let tx = (self.width / self.height) * ty;
         let bx = -(tx);
         let by = -(ty);
         self.b = Vector3 { x: bx, y: by, z: bz };
         self.t = Vector3 { x: tx, y: ty, z: tz };
-        self.width = width;
-        self.height = height;
+        self.update();
     }
 
     pub fn update(&mut self) {

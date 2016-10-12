@@ -162,10 +162,10 @@ impl<'a> ParsedScene<'a> {
                 "lookat" => p.parse_vector3().map(|v| p.scene.camera.lookat = v),
                 "pos" => p.parse_vector3().map(|v| p.scene.camera.eye = v),
                 "up" => p.parse_vector3().map(|v| p.scene.camera.up = v),
-                "fov" => p.parse_num().map(|f| p.scene.camera.fov = f),
+                "fov" => p.parse_num::<f64>().map(|f| p.scene.camera.fov = f.to_radians()/2f64),
                 _ => Err(ParseSceneError::GenericError),
             }
-        }).map(|_| self.scene.camera.update())
+        }).map(|_| self.scene.camera.setup_viewport())
     }
 
     fn parse_pointlight(&mut self) -> ParseResult {
