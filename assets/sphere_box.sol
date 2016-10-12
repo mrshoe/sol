@@ -15,13 +15,11 @@ camera {
 	fov	45
 }
 
-material {
-	name "red"
+material "red" {
 	color 1,0,0
 	diffuse 1
 }
-material {
-	name "blue"
+material "blue" {
 	color 0,0,1
 	diffuse 1
 }
@@ -29,13 +27,13 @@ material {
 pointlight
 {
     pos 4, 4, 3
-    color 1, 0, 0
+    color 1, 1, 1
     wattage 60
 }
 pointlight
 {
     pos 3, 4, 4
-    color 1, 0, 0
+    color 1, 1, 1
     wattage 60
 }
 
