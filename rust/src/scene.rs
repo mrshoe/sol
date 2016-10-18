@@ -6,6 +6,8 @@ use image::{ ImageBuffer, Rgb };
 use sceneobject::SceneObject;
 use light::Light;
 use material::Material;
+use std::sync::mpsc;
+use scoped_threadpool::Pool;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -41,16 +43,32 @@ impl Scene {
     }
 
     pub fn raytrace(&self) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
-        ImageBuffer::from_fn(self.width, self.height, |x, y| {
-            let eye_ray = self.camera.eye_ray(x, y);
-            let color = if let Some(hit) = self.trace(&eye_ray, 0.001, f64::MAX) {
-                self.shade(&hit, &eye_ray, 0) * 255.0
-            }
-            else {
-                self.bgcolor * 255.0
-            };
-            Rgb([color.x as u8, color.y as u8, color.z as u8])
-        })
+        let mut image_buffer: ImageBuffer<Rgb<u8>, Vec<u8>> = ImageBuffer::new(self.width, self.height);
+        let (tx, rx) = mpsc::channel();
+        let mut pool = Pool::new(12);
+        for x in 0..self.width {
+            let tx = tx.clone();
+            pool.scoped(|scope| {
+                scope.execute(move || {
+                    for y in 0..self.height {
+                        let eye_ray = self.camera.eye_ray(x, y);
+                        let color = if let Some(hit) = self.trace(&eye_ray, 0.001, f64::MAX) {
+                            self.shade(&hit, &eye_ray, 0) * 255.0
+                        }
+                        else {
+                            self.bgcolor * 255.0
+                        };
+                        let _ = tx.send((x, y, Rgb([color.x as u8, color.y as u8, color.z as u8])));
+                        //image_buffer.put_pixel(x, y, Rgb([color.x as u8, color.y as u8, color.z as u8]));
+                    }
+                });
+            });
+        }
+        for _ in 0..(self.width*self.height) {
+            let (x, y, color) = rx.recv().unwrap();
+            image_buffer.put_pixel(x, y, color);
+        }
+        image_buffer
     }
 
     fn trace(&self, ray: &Ray, min: f64, max: f64) -> Option<HitInfo> {
@@ -77,7 +95,6 @@ impl Scene {
             return result;
         }
         for light in &self.lights {
-            // TODO: get color from material
             let white = Material::white();
             let material = self.get_material(hit.material).unwrap_or(&white);
             let color = light.color * material.color;
@@ -104,7 +121,7 @@ impl Scene {
                     direction: (dn - (hit.normal * (2f64 * dn.dot(hit.normal)))).normalize(),
                 };
                 match self.trace(&specular_ray, 0.001, f64::MAX) {
-                    Some(spec_hit) => self.shade(&spec_hit, &specular_ray, depth+1),
+                    Some(spec_hit) => self.shade(&spec_hit, &specular_ray, depth+1) * material.specular,
                     None => Vector3::init(0f64),
                 }
             }

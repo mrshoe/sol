@@ -53,7 +53,6 @@ impl Camera {
     }
 
     pub fn setup_viewport(&mut self) {
-        println!("camera fov: {}", self.fov);
         let bz = 0.0001;
         let tz = bz + 1.0;
         //tan(fov) = t.y / b.z

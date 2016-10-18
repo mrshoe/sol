@@ -143,7 +143,7 @@ impl<'a> ParsedScene<'a> {
         let mut width = 0u32;
         let mut height = 0u32;
         self.parse_section(|p, t| {
-            println!("options directive: {}", t);
+            //println!("options directive: {}", t);
             match t.as_ref() {
                 "width" => p.parse_num().map(|i| width = i),
                 "height" => p.parse_num().map(|i| height = i),
@@ -157,7 +157,7 @@ impl<'a> ParsedScene<'a> {
 
     fn parse_camera(&mut self) -> ParseResult {
         self.parse_section(|p, t| {
-            println!("camera directive: {}", t);
+            //println!("camera directive: {}", t);
             match t.as_ref() {
                 "lookat" => p.parse_vector3().map(|v| p.scene.camera.lookat = v),
                 "pos" => p.parse_vector3().map(|v| p.scene.camera.eye = v),
@@ -175,7 +175,7 @@ impl<'a> ParsedScene<'a> {
             wattage: 100f64,
         };
         self.parse_section(|p, t| {
-            println!("pointlight directive: {}", t);
+            //println!("pointlight directive: {}", t);
             match t.as_ref() {
                 "pos" => p.parse_vector3().map(|v| light.position = v),
                 "color" => p.parse_vector3().map(|v| light.color = v),
@@ -198,7 +198,7 @@ impl<'a> ParsedScene<'a> {
             material: "white".to_string(),
         };
         self.parse_section(|p, t| {
-            println!("triangle directive: {}", t);
+            //println!("triangle directive: {}", t);
             match t.as_ref() {
                 "v1" => p.parse_vector3().map(|v| tri.v1 = v),
                 "v2" => p.parse_vector3().map(|v| tri.v2 = v),
@@ -219,7 +219,7 @@ impl<'a> ParsedScene<'a> {
             material: "white".to_string(),
         };
         self.parse_section(|p, t| {
-            println!("triangle directive: {}", t);
+            //println!("triangle directive: {}", t);
             match t.as_ref() {
                 "center" => p.parse_vector3().map(|v| sphere.center = v),
                 "radius" => p.parse_num().map(|f| sphere.radius = f),
@@ -232,7 +232,7 @@ impl<'a> ParsedScene<'a> {
     fn parse_material(&mut self) -> ParseResult {
         let mut mat = Material::white();
         self.parse_section(|p, t| {
-            println!("material directive: {}", t);
+            //println!("material directive: {}", t);
             match t.as_ref() {
                 "color" => p.parse_vector3().map(|v| mat.color = v),
                 "diffuse" => p.parse_num().map(|f| mat.diffuse = f),
@@ -240,7 +240,7 @@ impl<'a> ParsedScene<'a> {
                 _ => Err(ParseSceneError::GenericError),
             }
         }).map(|n| {
-            println!("material name: {}", n);
+            //println!("material name: {}", n);
             mat.name = n;
             self.scene.materials.push(mat)
         })

@@ -1,5 +1,6 @@
 extern crate image;
 extern crate regex;
+extern crate scoped_threadpool;
 
 use std::fs::File;
 use std::io;
@@ -41,8 +42,7 @@ fn raytrace_scene(scenedef: String) {
 
 fn main() {
     if let Some(filename) = env::args().nth(1) {
-        let scenefile = readfile(filename);
-        match scenefile {
+        match readfile(filename) {
             Err(e) => println!("Error reading scene file: {}", e),
             Ok(contents) => raytrace_scene(contents),
         }
